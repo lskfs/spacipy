@@ -14,7 +14,7 @@ Gem files are usually four columns, tab-delimited, plain text files generated fr
     Plxna2  13842   18100   1
     Kcnh1   19118   1036    1
 
-## Gem gem file format parser class constructed based on pandas DataFrame
+## gem.py
 #### import Gem class and read in the gem file
 ```python
 from .gem import Gem
