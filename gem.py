@@ -7,10 +7,15 @@ import pandas as pd
 
 #from pathlib import Path
 
+class GemSeries(pd.Series):
+    pass
+
 class Gem(pd.DataFrame):
     @property
     def _constructor(self):
         return Gem
+
+    _constructor_sliced = GemSeries
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -46,8 +51,8 @@ class Gem(pd.DataFrame):
         if cell:
             df = df.rename(columns={cell: 'label'})
 
-        if 'label' in df.columns:
-            df['label'] = df['label'].astype(str)
+        #if 'label' in df.columns:
+        #    df['label'] = df['label'].astype(str)
 
         return cls(df, copy=True)
 
@@ -96,8 +101,8 @@ class Gem(pd.DataFrame):
             obj['x'] = (obj['x'] / obj.bin_size).astype(int)
             obj['y'] = (obj['y'] / obj.bin_size).astype(int)
 
-        max_x = obj['x'].max() + 1
-        max_y = obj['y'].max() + 1
+        max_x = int(obj['x'].max()) + 1
+        max_y = int(obj['y'].max()) + 1
         
         if on in ['nCount', 'nFeature']:
             obj = obj.stat()
@@ -120,9 +125,15 @@ class Gem(pd.DataFrame):
         return image
 
     @property
-    def shape(self):
-        img = self.to_img()
-        return img.shape
+    def img_shape(self):
+        width = self['x'].max() - self['x'].min() + 1
+        height = self['y'].max() - self['y'].min() + 1
+
+        if isinstance(width, float):
+            width = int(width) + 1
+        if isinstance(height, float):
+            height = int(height) + 1
+        return (height, width)
     
     def to_matrix(self, bin_size=None, outfile=None):
         obj = self.copy(deep=True)
@@ -150,7 +161,7 @@ class Gem(pd.DataFrame):
         
         obj = self.copy(deep=True)
         
-        assert obj.to_img().shape == matrix.shape
+        assert obj.img_shape == matrix.shape
         
         obj['x_mtx'] = obj['y'] - obj['y'].min()
         obj['y_mtx'] = obj['x'] - obj['x'].min()
@@ -189,13 +200,20 @@ class Gem(pd.DataFrame):
         
         return obj, offset_x, offset_y
     
-    def stat(self, outfile=None):
+    def stat(self, batch=None, outfile=None):
         obj = self.copy(deep=True)
+
+        if batch:
+            assert batch in obj.columns
 
         if 'label' in obj.columns:
             cols = ['x', 'y', 'label']
         else:
             cols = ['x', 'y']
+
+        #if batch:
+        #    cols.append(batch)
+
         obj = obj.groupby(cols).agg(
                 nCount=('MIDCounts', 'sum'), 
                 nFeature=('geneID', 'nunique')
@@ -268,17 +286,62 @@ class Gem(pd.DataFrame):
     def add_layer(self, image, mask=None):
         pass
 
-    def plot(self, on=None, metadata=None, 
-            bin_size=None, cmap=None, 
-            robust=False, image=None, 
-            mask=None, border=None,
+    def add_metadata(self, metadata, batch=None, bin_size=None, right_on=None,
+            inplace=False):
+        """ add metadata info for each DNB
+        metadata: csv file or pandas DataFrame
+        batch: colname in metadata which used as batch info
+        left_on: colnames to join on in gem, default label
+        right_on: colnames to join on in metadata, default label
+        """
+        import pandas as pd
+        obj = self.copy(deep=True)
+
+        if not isinstance(metadata, pd.DataFrame):
+            metadata = pd.read_csv(metadata, sep='\t', header=0)
+            #if 'seurat_clusters' in metadata.columns:
+            #    metadata['seurat_clusters'] = metadata['seurat_clusters'] + 1
+        if bin_size:
+            obj = obj.binning(bin_size=bin_size, add_cols=True)
+            obj['label'] = obj['xbin'].astype(str) + '_' + obj['ybin'].astype(str)
+
+        left_on = ['label']
+        if not right_on:
+            if 'cell' in metadata.columns:
+                right_on = ['cell']
+            elif 'label' in metadata.columns:
+                right_on = ['label']
+        else:
+            if isinstance(right_on, str):
+                right_on = [right_on]
+
+        if batch:
+            assert batch in obj.columns, f'column {batch} not find in gem'
+            left_on.append(batch)
+            right_on.append(batch)
+
+        obj = obj.merge(metadata, how='left', 
+                left_on=left_on, 
+                right_on=right_on
+                )
+
+        if inplace:
+            self._update_inplace(obj)
+        else:
+            return obj
+
+    def plot(self, 
+            on=None, bin_size=None,
+            metadata=None, batch=None,
+            cmap=None, robust=False, 
+            image=None, mask=None, border=None,
             offset_x=0, offset_y=0, 
             i_alpha=0.5, h_alpha=0.5, 
             outfile=None, ax=None,
-            dx=715, units='nm',
+            dx=715, units='nm', scalebar_length=50,
             ps=0.1, alpha=1, cbar=True,
             atx=None, aty=None, rotation=None,
-            category=False,
+            category=False, font_scale=1,
             ):
         
         obj = self.copy(deep=True)
@@ -294,29 +357,15 @@ class Gem(pd.DataFrame):
                 border = scipy.ndimage.affine_transform(border.T, affine, order=0).T
         
         if metadata is not None:
-            import pandas as pd
-
-            if not isinstance(metadata, pd.DataFrame):
-                metadata = pd.read_csv(metadata, sep='\t', header=0)
-            #if 'seurat_clusters' in metadata.columns:
-            #    metadata['seurat_clusters'] = metadata['seurat_clusters'] + 1
-            if bin_size is None:
-                assert ('cell' in metadata.columns) or ('label' in metadata.columns)
-                if 'cell' in metadata.columns:
-                    metadata = metadata.rename(columns={'cell':'label'})
-                metadata['label'] = metadata['label'].astype(str)
-                obj = obj.merge(metadata, how='left', on='label')
-            else:
-                assert ('xbin' in metadata.columns) and ('ybin' in metadata.columns)
-                obj = obj.binning(bin_size=bin_size, add_cols=True)
-                obj = obj.merge(metadata, how='left', on=['xbin', 'ybin'])
+            obj = obj.add_metadata(metadata, batch=batch, bin_size=bin_size, 
+                    right_on='cell')
 
         if offset_x or offset_y:
             obj['x'] = obj['x'] - offset_x
             obj['y'] = obj['y'] - offset_y
 
         if on in ['nCount', 'nFeature']:
-            obj = obj.stat()
+            obj = obj.stat(batch=batch)
 
         assert on in obj.columns
 
@@ -336,16 +385,14 @@ class Gem(pd.DataFrame):
         mpl.rcParams.update({"scalebar.scale_loc": 'top'})
         mpl.rcParams.update({"scalebar.location": 'lower right'})
         mpl.rcParams.update({"scalebar.box_alpha": 0})
+        mpl.rcParams.update({'font.size': font_scale * 18})
         
         if image is None:
-            if offset_x or offset_y:
-                heatmap = obj.to_img(reset_coords=False)
-            else:
-                heatmap = obj.to_img()
-            shape = [i / 100 for i in heatmap.shape[::-1]]
+            shape = [i / 100 for i in obj.img_shape[::-1]]
         else:
             shape = [i / 100 for i in image.shape[::-1]]
         
+        plt.style.use('dark_background')
         if ax is None:
             fig, ax = plt.subplots(figsize=shape, dpi=100)
         else:
@@ -356,16 +403,31 @@ class Gem(pd.DataFrame):
         y = obj.y.values
         value = obj[on].values
 
-        if robust:    
+        if robust:
             vmin = np.nanpercentile(value, 0.02)
             vmax = np.nanpercentile(value, 0.98)
         else:
             vmin, vmax = None, None
-
+        
         if isinstance(cmap, list):
             if category:
-                cmap = cmap[:max(value) + 1]
-            cmap = mpl.colors.ListedColormap(cmap)
+                N = len(set(value))
+            else:
+                N = len(cmap)
+            cmap = mpl.colors.ListedColormap(cmap, N=N)
+            if not category:
+                cmap = cmap.colors
+                cmap = mpl.colors.LinearSegmentedColormap.from_list('cmap', cmap)
+        elif isinstance(cmap, str):
+            if category:
+                N = len(set(value))
+            else:
+                N = 256
+            cmap = plt.get_cmap(cmap, N)
+            if isinstance(cmap, mpl.colors.LinearSegmentedColormap):
+                import matplotlib.colors as mc
+                cmap = [mc.rgb2hex(cmap(i)) for i in range(cmap.N)]
+                cmap = mpl.colors.ListedColormap(cmap, N=N)
 
         scatter = ax.scatter(x, y, 
                 s=ps,
@@ -395,7 +457,7 @@ class Gem(pd.DataFrame):
         scalebar = ScaleBar(
                 dx=dx, 
                 units=units, 
-                fixed_value=50, 
+                fixed_value=scalebar_length, 
                 fixed_units='um'
                 )
         ax.add_artist(scalebar)
@@ -414,14 +476,21 @@ class Gem(pd.DataFrame):
             if not category:
                 cb = fig.colorbar(scatter, cax=cax, label=on,)
             else:
-                norm = mpl.colors.NoNorm()
+                if isinstance(cmap, mpl.colors.ListedColormap):
+                    norm = mpl.colors.NoNorm()
+                else:
+                    bounds = np.arange(-1, len(set(value)), 1)
+                    norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
                 cb = fig.colorbar(
                         mpl.cm.ScalarMappable(cmap=cmap, norm=norm),
                         cax=cax,
-                        label=on,
+                        #label=on,
                         )
+            #cb.ax.tick_params(color='white', labelcolor='white', labelsize=fontsize)
+            #cb.ax.set_ylabel(on, fontsize=fontsize, fontweight='bold')
             cb.ax.tick_params(color='white', labelcolor='white')
-
+            cb.ax.set_ylabel(on, fontweight='bold')
+        
         plt.subplots_adjust(left=0, bottom=0, right=1, top=1, 
                 hspace=0, wspace=0)
         if outfile:
@@ -445,6 +514,9 @@ class Gem(pd.DataFrame):
         width, height: target canvas shape
         rotation: clock wise rotation degree
         """
+
+        import math
+
         obj = self.copy(deep=True)
         
         if canvas:
@@ -466,33 +538,33 @@ class Gem(pd.DataFrame):
         else:
             offsety = 0
 
-        obj['x'] = obj['x'] + offsetx
-        obj['y'] = obj['y'] + offsety
+        obj['x'] = obj['x'] - obj['x'].min() + offsetx
+        obj['y'] = obj['y'] - obj['y'].min() + offsety
         
         def srotate(angle, xs, ys, px, py):
-            import math
-            xs = (xs - px) * math.cos(angle) + \
+            angle = math.radians(angle)
+            x = (xs - px) * math.cos(angle) + \
                     (ys - py) * math.sin(angle) + px
-            ys = (ys - py) * math.cos(angle) - \
+            y = (ys - py) * math.cos(angle) - \
                     (xs - px) * math.sin(angle) + py
-            return xs, ys
+            return x, y
         if rotation:
-            gx = orig_gx + offsetx
-            gy = orig_gy + offsety
+            #gx = orig_gx + offsetx
+            #gy = orig_gy + offsety
 
             xs, ys = srotate(
                     rotation, 
                     obj.x.values,
                     obj.y.values,
-                    gx,
-                    gy
+                    x,
+                    y
                     )
             
             obj['x'] = xs
             obj['y'] = ys
         
         if return_affine:
-            affine = np.ndarray([
+            affine = np.array([
                     [math.cos(rotation), math.sin(rotation), offsetx], 
                     [-math.sin(rotation), math.cos(rotation), offsety], 
                     [0, 0, 1]
@@ -500,4 +572,55 @@ class Gem(pd.DataFrame):
             return obj, affine
         else:
             return obj
+
+    def rearrange(self, batch, order=None, rotation=None, ncols=6, pad=True):
+        """auto rearrange the location for batch gem
+        batch: which column should be detected as batch
+        order: values from batch column for ordering control
+        rotation: degree for clockwise rotation
+        ncols: col number in the figure
+        pad: whether append pad around each gem
+        """
+
+        obj = self.copy(deep=True)
+        assert batch in obj.columns
+        
+        max_width, max_height = 0, 0
+        batches = []
+        for sample, group in obj.groupby(batch):
+            batches.append(sample)
+            w, h = group.img_shape
+            if w > max_width:
+                max_width = w
+            if h > max_height:
+                max_height = h
+        if pad:
+            max_width += int(max_width / 10)
+            max_height += int(max_height / 10)
+
+        if order:
+            batches = order[:]
+        if rotation:
+            batches = list(zip(batches, rotation))
+        else:
+            batches = list(zip(batches, [0] * len(batches)))
+        
+        merged_gem = []
+        for index, (sample, degree) in enumerate(batches):
+            ncol = index % ncols
+            nrow = index // ncols
+
+            x = int(max_width / 2) + ncol * max_width
+            y = int(max_height / 2) + nrow * max_height
+            
+            gem = obj[obj[batch] == sample]
+            gem, affine = gem.relocation(x=x, y=y, rotation=degree,
+                    return_affine=True)
+            merged_gem.append(gem)
+        
+        merged_gem = pd.concat(merged_gem)
+        return merged_gem
+
+GemSeries._constructor_expanddim = Gem
+
 
