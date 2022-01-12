@@ -1,5 +1,5 @@
 # STOmics-ToolBox
-collection of scripts for some basic STOmic data processing
+collection of modules for some basic STOmic data processing
 
 ## Description of the Gem Format
 
