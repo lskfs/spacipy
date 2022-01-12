@@ -18,5 +18,5 @@ Gem files are usually four columns, tab-delimited, plain text files generated fr
 #### import Gem class and read in the gem file
 ```python
 from .gem import Gem
-gem = Gem.readin('')
+gem = Gem.readin('./data/example.gem.gz')
 ```
