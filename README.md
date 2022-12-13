@@ -1,4 +1,4 @@
-# STOmics-ToolBox
+# stomics tools for custom users
 collection of modules for some basic STOmic data processing
 
 ## Description of the Gem Format
