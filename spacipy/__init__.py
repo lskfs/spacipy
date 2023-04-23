@@ -1,5 +1,5 @@
 
-colors = [
+_colors = [
           '#d70000', '#8c3cff', '#028800', '#00acc7', '#98ff00', 
           '#ff7fd1', '#6c004f', '#ffa530', '#583b00', '#005759', 
           '#0000dd', '#00fdcf', '#a1756a', '#bcb7ff', '#95b578', 
@@ -45,12 +45,8 @@ def get_cmap(cmap=None, N=None, category=False, theme='light'):
             cmap = mpl.colors.ListedColormap(cmap, N=N)
     return cmap
 
-_cmap = get_cmap(cmap=colors, N=len(colors), category=True)
-
 from .gem import Gem
 from .gemplot import gem_spatial
 from .mask import Stoarr
 from .segplot import seg_spatial
-
-
 
