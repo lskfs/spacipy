@@ -5,7 +5,7 @@ import os
 
 setuptools.setup(
     name="spacipy",
-    version="1.0.1",
+    version="0.0.1",
     author="Kai Han",
     author_email="hankai@genomics.cn",
     url="https://github.com/lskfs/spacipy",
@@ -16,7 +16,7 @@ setuptools.setup(
         os.path.splitext(os.path.basename(path))[0] for path in glob.glob("spacipy/*.py")
     ],
     classifiers=[
-        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.9",
         "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
         "Operating System :: OS Independent",
     ],
