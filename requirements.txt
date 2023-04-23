@@ -1,0 +1,8 @@
+numpy>=
+scipy>=
+pandas>=1.3.5
+matplotlib>= 
+opencv2-python>=
+skimage
+alphashape>=
+anndata>=0.8.0 
