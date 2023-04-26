@@ -1,5 +1,6 @@
 .. sidebar:: Other related project
-   .. subtitle: ----------------------------------------
+   
+   .. subtitle: 
 
    .. rubric:: Supporting
    
