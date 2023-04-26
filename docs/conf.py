@@ -59,4 +59,5 @@ html_context = dict(
     conf_py_path='/docs/',  # Path in the checkout to the docs root
 )
 html_static_path = ['_static']
+html_css_files = ["css/custom.css"]
 html_show_sphinx = True
