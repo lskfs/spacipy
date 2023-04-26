@@ -1,10 +1,8 @@
-.. spacipy documentation master file, created by
-   sphinx-quickstart on Wed Apr 26 09:41:35 2023.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. include:: ../README.md
 
 Welcome to spacipy's documentation!
 ===================================
+Collection of in-house python modules for some basic STOmic data processing and visualization. It write mainly for format converting and visualization of stereo-seq data.
 
 .. toctree::
    :maxdepth: 2
