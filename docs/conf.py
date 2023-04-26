@@ -15,6 +15,7 @@ release = '0.0.1'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 templates_path = ['_templates']
+source_suffix = ['.rst', '.md']
 master_doc = 'index'
 default_role = 'literal'
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
