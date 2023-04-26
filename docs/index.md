@@ -20,6 +20,8 @@
 :hidden: true
 :maxdepth: 1
 
+gem
+stoarr
 tutorials
 usage-principles
 installation
