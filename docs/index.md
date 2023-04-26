@@ -3,7 +3,7 @@
 ```
 
 ```{eval-rst}
-.. include:: _key_contributors.rst
+.. include:: _links.rst
 ```
 
 ```{eval-rst}
