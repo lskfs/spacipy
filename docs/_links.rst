@@ -1,5 +1,6 @@
-.. sidebar:: other related project
-   
+.. sidebar:: Other related project
+   .. subtitle: ☀☀☀☀☀☀☀☀☀☀☀☀☀☀
+
    .. rubric:: Supporting
    
    * `SPC <https://github.com/lskfs/SPC>`_: Spatial Proximity based Clustering ☀
