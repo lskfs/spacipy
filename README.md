@@ -1,4 +1,4 @@
-# spacipy - Stereo-seq data processing module in Python
+# spacipy
 Collection of in-house python modules for some basic STOmic data processing and visualization. It write mainly for format converting and visualization of stereo-seq data.
 
 - Read the [documentation](https://spacipy.readthedocs.io).
