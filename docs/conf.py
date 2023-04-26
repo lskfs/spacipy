@@ -49,7 +49,7 @@ extensions = [
 html_theme = 'sphinx_rtd_theme'
 html_theme_options = dict(
     navigation_depth=4,
-    logo_only=True
+    logo_only=False
 )
 html_context = dict(
     display_github=True,  # Integrate GitHub
@@ -59,4 +59,4 @@ html_context = dict(
     conf_py_path='/docs/',  # Path in the checkout to the docs root
 )
 html_static_path = ['_static']
-html_show_sphinx = False
+html_show_sphinx = True
