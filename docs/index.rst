@@ -1,19 +1,29 @@
-.. include:: ../README.md
-   :end-line: 3
+```{include} ../README.md
+:end-line: 3
+```
 
-Welcome to spacipy's documentation!
-===================================
-Collection of in-house python modules for some basic STOmic data processing and visualization. It write mainly for format converting and visualization of stereo-seq data.
+```{eval-rst}
+.. include:: _key_contributors.rst
+```
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+```{eval-rst}
+.. role:: small
+```
 
+```{eval-rst}
+.. role:: smaller
+```
 
+* Get started by browsing {doc}`tutorials <tutorials>`, {doc}`usage principles <usage-principles>` or the main {doc}`API <api>`.
 
-Indices and tables
-==================
+```{toctree}
+:hidden: true
+:maxdepth: 1
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+tutorials
+usage-principles
+installation
+api
+```
+
+[github]: https://github.com/lskfs/spacipy
