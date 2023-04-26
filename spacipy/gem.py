@@ -695,7 +695,8 @@ class Gem(pd.DataFrame):
         if return_fig:
             return fig
         return ax
-
+    
+    @property
     def center(self):
         
         x = int((self.x.max() - self.x.min()) / 2)
@@ -703,7 +704,7 @@ class Gem(pd.DataFrame):
         y = int((self.y.max() - self.y.min()) / 2)
         gy = y + self.y.min()
         
-        return x, y, gx, gy
+        return (x, y, gx, gy)
 
     def relocation(self, x=None, y=None, canvas=None, width=None, height=None, 
             rotation=0, return_affine=False):
@@ -725,7 +726,7 @@ class Gem(pd.DataFrame):
         if height:
             y = int(height / 2)
         
-        orig_x, orig_y, orig_gx, orig_gy = obj.center()
+        orig_x, orig_y, orig_gx, orig_gy = obj.center
 
         if x:
             offsetx = x - orig_x
