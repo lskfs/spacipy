@@ -21,3 +21,7 @@
   -webkit-font-smoothing: antialiased;
 
 }
+
+.wy-nav-content {
+    max-width: none;
+}
