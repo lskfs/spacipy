@@ -60,4 +60,4 @@ html_context = dict(
     github_version='master',  # Version
     conf_py_path='/docs/',  # Path in the checkout to the docs root
 )
-html_show_sphinx = True
+html_show_sphinx = False
