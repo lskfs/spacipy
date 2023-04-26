@@ -1,4 +1,5 @@
 .. include:: ../README.md
+   :end-line: 3
 
 Welcome to spacipy's documentation!
 ===================================
