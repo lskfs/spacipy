@@ -9,6 +9,9 @@ from pathlib import Path
 HERE = Path(__file__).parent
 sys.path[:0] = [str(HERE.parent), str(HERE / 'extensions')]
 
+nitpicky = True
+needs_sphinx = '2.0'  # Nicer param docs
+
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
