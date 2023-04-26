@@ -12,4 +12,5 @@ python:
     extra_requirements:
     - docs
   - requirements: requirements.txt
+  - requirements: docs/requirements.txt
   system_packages: true
