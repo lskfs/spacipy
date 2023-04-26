@@ -47,6 +47,8 @@ extensions = [
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = 'sphinx_rtd_theme'
+html_static_path = ['_static']
+html_css_files = ["css/custom.css"]
 html_theme_options = dict(
     navigation_depth=4,
     logo_only=False
@@ -58,6 +60,4 @@ html_context = dict(
     github_version='master',  # Version
     conf_py_path='/docs/',  # Path in the checkout to the docs root
 )
-html_static_path = ['_static']
-html_css_files = ["css/custom.css"]
 html_show_sphinx = True
