@@ -4,6 +4,8 @@ import sys
 import numpy as np
 import pandas as pd
 
+from spacipy import get_cmap
+
 class GemSeries(pd.Series):
     pass
 
