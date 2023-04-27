@@ -62,7 +62,7 @@ Conversion / IO
    Gem.to_matrix
    Gem.to_anndata
 
-Plot
+Plotting
 -------------------------
 .. autosummary::
    :toctree: api/
