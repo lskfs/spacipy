@@ -63,3 +63,10 @@ Conversion / IO
    Gem.to_img
    Gem.to_matrix
    Gem.to_anndata
+
+Plot
+-------------------------
+.. autosummary::
+   :toctree: api/
+
+   Gem.plot
