@@ -1,6 +1,6 @@
 
 import numpy as np
-from . import get_cmap
+from spacipy import get_cmap
 
 class Stoarr(np.ndarray):
     """A Stoarr object is a numpy.ndarray with adapted method for spatial matrix"""
