@@ -1,4 +1,4 @@
-.. _api.mask:
+.. _api.stoarr:
 
 ======
 Stoarr
