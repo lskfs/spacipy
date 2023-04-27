@@ -1,9 +1,9 @@
 
 import numpy as np
-from spacipy import get_cmap, _colors
+from . import get_cmap
 
 class Stoarr(np.ndarray):
-    """numpy ndarray subclass"""
+    """A Stoarr object is a numpy.ndarray with adapted method for spatial matrix"""
     def relabel(self, base=0, return_map=False):
         
         obj = self.copy()
@@ -35,6 +35,16 @@ class Stoarr(np.ndarray):
             return relabeled_obj
 
     def rotation(self, angle=None, contour_slice=True):
+        """
+        rotate the object clockwise
+        
+        Parameters
+        ------------
+        angle: int
+            The rotation angle in degrees.
+        contour_slice: bool, default True
+            Whether or not slice the object with contour before rotate
+        """
 
         from scipy.ndimage import rotate
 
@@ -64,6 +74,14 @@ class Stoarr(np.ndarray):
         return obj
 
     def to_triplet(self, name='mask'):
+        """
+        Convert the object to triplet structure
+
+        Parameters
+        -----------------
+        name: str
+            column name of the value in triplet table
+        """
         import pandas as pd
         import scipy.sparse
 
@@ -77,6 +95,14 @@ class Stoarr(np.ndarray):
         return triplet
 
     def padding(self, pad=None):
+        """
+        Padding empty pixels around the object
+
+        Parameters
+        --------------
+        pad: int
+            number of pixels to pad
+        """
 
         obj = self.copy()
         """
@@ -100,6 +126,15 @@ class Stoarr(np.ndarray):
         return obj
 
     def contour_slice(self, transfer_to=None):
+        """
+        Slice the object with nearest contour box
+        
+        Parameters
+        -------------
+        transfer_to: np.ndarry or Stoarr object
+            also slice other provided object with the same contour,
+            will return a new sliced object
+        """
         
         obj = self.copy()
 
@@ -173,6 +208,18 @@ class Stoarr(np.ndarray):
         return obj
 
     def concat(self, other, cols=None, dis=10):
+        """
+        Concat multiple objects into a single one
+        
+        Parameters
+        -----------------
+        other: np.ndarray/stoarr, list
+            np.ndarray/stoarr object or list of objects
+        cols: int
+            column numbers 
+        dis: int
+            pixel number to pad between the objects
+        """
 
         obj = self.copy()
         if isinstance(other, np.ndarray):
@@ -192,6 +239,17 @@ class Stoarr(np.ndarray):
         return obj
 
     def alpha_shape(self, alpha=0.05):
+        """
+        Compute the alpha shape (concave hull) around the object
+        
+        Will return a new object with attribute 'hull' which saving 
+        the xy coordinates of the alpha shape
+
+        Parameters
+        ---------------
+        alpha: float
+            alpha value
+        """
         import alphashape
 
         obj = self.copy()
@@ -209,6 +267,16 @@ class Stoarr(np.ndarray):
         return obj
 
     def find_boundaries(self, mode='inner'):
+        """
+        Compute the boundaries of the object.
+        Return bool array where boundaries between labeled regions are True.
+
+        Parameters
+        ----------------
+        mode: str, default inner
+            mode in ['thick', 'inner', 'outer', 'subpixel'], 
+            see skimage.segmentation.find_boundaries for detail
+        """
 
         import skimage.segmentation as ss
         
@@ -218,13 +286,52 @@ class Stoarr(np.ndarray):
                 obj, mode=mode).astype(bool)
 
         return boundaries
-
+    
     def plot(self, annotation=None, highlight=None, 
-            annotation_cmap=None, bg='black', highlight_bg='#808080',
+            bg='black', highlight_bg='#808080',
             scalebar=True, dx=0.715, scalebar_length=500, 
             alpha_shape=True, alpha=0.05, border=True, 
             cmap=None, category=True, cbar=False, 
             ax=None, outfile=None, vmin=None, vmax=None):
+        """
+        Imaging the object
+        
+        Parameters
+        ---------------------
+        annotation: pandas.DataFrame
+            one column pandas DataFrame containing annotation,
+            with object labels as index
+        highlight: list
+            which value in the annotation table to highlight
+        highlight_bg: str
+            hex code for the non-highlight values
+        bg: str
+            background color
+        scalebar: bool, default True
+            whether or not to plot the scale bar
+        dx: float
+            pixel scale for scale bar calculation
+        scalebar_length: float
+            length of the scale bar
+        alpha_shape: bool
+            pass
+        alpha: float
+            pass
+        border: bool, default True
+            whether or not to plot the border for cell segment
+        cmap: str, list
+            color map used for plot, can be matplotlib colormap or hex code
+        category: bool, default True
+            whether the value is category or continous type
+        cbar: bool, default False
+            whether or not to plot the color bar
+        ax: matplotlib.Axis
+            matplotlib.Axis
+        outfile: str
+            save the image
+        vmin, vmax: int
+            minimal and maximal value range for color        
+        """
 
         import matplotlib as mpl
         import matplotlib.pyplot as plt
@@ -283,23 +390,19 @@ class Stoarr(np.ndarray):
             ax = ax
 
         if not cmap:
-            if not category:
-                cmap = get_cmap('deep', category=category)
+            cmap = 'deep'
+        if category and isinstance(cmap, dict):
+            from matplotlib.colors import ListedColormap
+            letter2num = triplet[[col, 'mask']].drop_duplicates().to_dict('tight')['data']
+            letter2num = sorted(letter2num, key=lambda x: x[1])
+            if highlight is None:
+                cmap = [cmap[l] for l, n in letter2num]
+                label = [l for l, n in letter2num]
             else:
-                cmap = get_cmap(_colors, N=N, category=category, theme='dark')
-        else:
-            if isinstance(cmap, dict):
-                assert category == True
-                from matplotlib.colors import ListedColormap
-                letter2num = triplet[[col, 'mask']].drop_duplicates().to_dict('tight')['data']
-                letter2num = sorted(letter2num, key=lambda x: x[1])
-                if highlight is None:
-                    cmap = [cmap[l] for l, n in letter2num]
-                    label = [l for l, n in letter2num]
-                else:
-                    cmap = [cmap[l] if l in highlight else highlight_bg for l, n in letter2num]
-                    label = [l for l, n in letter2num if l in highlight]
-            cmap = get_cmap(cmap, N=N, category=category, theme='dark')
+                cmap = [cmap[l] if l in highlight else highlight_bg for l, n in letter2num]
+                label = [l for l, n in letter2num if l in highlight]
+
+        cmap = get_cmap(cmap, N=N, category=category, theme='dark')
         cmap.set_bad(color=bg)
 
         im = ax.imshow(obj, cmap=cmap, zorder=0, interpolation='none', 

@@ -1,19 +1,15 @@
 #!/usr/bin/env python3
 
-import os
 import sys
 import numpy as np
 import pandas as pd
-#from memory_profiler import profile
-
-#from pathlib import Path
 
 class GemSeries(pd.Series):
     pass
 
 class Gem(pd.DataFrame):
     """
-    BGI stereo-seq spatial gene expression data structure based on pandas DataFrame
+    A Gem object is a pandas.DataFrame with adapted method for stereo-seq GEM file.
     """
     @property
     def _constructor(self):
@@ -29,7 +25,7 @@ class Gem(pd.DataFrame):
     @classmethod
     def readin(cls, gem, **kwargs):
         """
-        sample name should be SN or variant
+        Alternate constructor to create a Gem from a file.
         """
 
         df = pd.read_csv(gem, sep='\t', header=0, 
@@ -62,14 +58,15 @@ class Gem(pd.DataFrame):
 
     def binning(self, bin_size=None, batch=None, inplace=False, outfile=None, 
             add_cols=False):
-        """group gem into bins of fixed width and height
+        """
+        Group gem into square bins with fixed width and height.
         
         Parameters
         --------------------
         bin_size: int
             size of width and height of each bin
         batch: str
-            batch column 
+            column name for Batch information if contain
         add_cols: bool
             add bin coords values in new columns other than change the 
             original x, y coords
@@ -113,14 +110,15 @@ class Gem(pd.DataFrame):
             return obj
 
     def to_img(self, on=None, bin_size=None, outfile=None, reset_coords=True, pad=0):
-        """convert gem into image
+        """
+        Convert gem into image using nCount or nFeature as pixel value.
 
         Parameters
         ----------
-        on: str
-            how to represent each pixel of the image
+        on: str, default nCount
+            how to represent each pixel of the image, 'nCount' or 'nFeature'
         bin_size: int
-            group into bins before convert
+            group into bins before convert with width and height of bin_size
         outfile: str
             save the image
         reset_coords: bool, default True
@@ -177,6 +175,9 @@ class Gem(pd.DataFrame):
 
     @property
     def img_shape(self):
+        """
+        the shape of representative image.
+        """
         width = self['x'].max() - self['x'].min() + 1
         height = self['y'].max() - self['y'].min() + 1
 
@@ -187,6 +188,16 @@ class Gem(pd.DataFrame):
         return (height, width)
     
     def to_matrix(self, bin_size=None, outfile=None):
+        """
+        convert the tabular structure to sparse matrix.
+
+        Parameters
+        ----------
+        bin_size: int
+            group into bins before convert with width and height of bin_size
+        outfile: str
+            save the matrix
+        """
         obj = self.copy(deep=True)
 
         adata = obj.to_anndata(bin_size=bin_size)
@@ -209,6 +220,21 @@ class Gem(pd.DataFrame):
 
     def roi(self, x=None, y=None, width=None, height=None, 
             inplace=False, outfile=None,):
+        """
+        Subset the gem object with specified coordinate, width and height
+
+        Parameters
+        ----------
+        x, y: int
+            bottom-left point coordinate
+        width, height: int
+            width and height from the bottom-left point
+        outfile: str
+            save the subsetted gem
+        inplace: bool, default False
+            Whether should modify the data in place or return
+            a modified copy.
+        """
 
         obj = self.copy(deep=True)
 
@@ -229,6 +255,25 @@ class Gem(pd.DataFrame):
 
     def mask(self, matrix, outfile=None, label_object=False, 
             return_offset=True, return_cropped_mask=False):
+        """
+        Subset the gem object with a numpy array mask
+
+        Parameters
+        ----------
+        matrix: np.ndarray(int)
+            mask matrix in int dtype, coordinate with overlapped 
+            0 or nan will be dropped
+        outfile: str
+            save the subsetted gem
+        label_object: bool, default False
+            Whether or not to label the masked object, which will 
+            generate a new 'label' column in the result object
+        return_offset: bool, default True
+            Whether or not to return the offset
+        return_cropped_mask: bool, default False
+            Whether or not to return the cropped mask matrix, which
+            will only keep the kept region in result object
+        """
         
         obj = self.copy(deep=True)
         
@@ -279,6 +324,21 @@ class Gem(pd.DataFrame):
             return obj
     
     def stat(self, genes=None, batch=None, bycell=False, outfile=None):
+        """
+        Compute some basic statistic for the object
+
+        Parameters
+        ----------
+        genes: str, list
+            Also consider certain genes for computing beside by
+            default total statistic.
+        batch: str
+            column name for Batch information if contain
+        bycell: bool, defaul False
+            statistic at cell level other than at spot level
+        outfile: str
+            save the results
+        """
 
         obj = self.copy(deep=True)
         if genes:
@@ -317,15 +377,15 @@ class Gem(pd.DataFrame):
         if genes:
             if isinstance(genes, str):
                 genes = [genes]
-            if isinstance(genes, list):
-                genes = dict((gene, [gene]) for gene in genes)
-            for name, gene in genes.items():
-                gene_obj = obj_copy[obj_copy['geneID'].isin(gene)]
-                gene_obj = gene_obj.groupby(['x', 'y']).agg(
-                        MIDCounts=('MIDCounts', 'sum')
-                        )
-                gene_obj = gene_obj.rename(columns={'MIDCounts': name})
-                obj = obj.merge(gene_obj, how='left', on=['x', 'y'], )
+            obj_copy = obj_copy[obj_copy['geneID'].isin(genes)]
+            obj_copy = obj_copy.groupby(['x', 'y', 'geneID']).agg(
+                    MIDCounts=('MIDCounts', 'sum')
+                    )
+            obj_copy = obj_copy.pivot(
+                    index=['x', 'y'], 
+                    columns='geneID', 
+                    values='MIDCounts').reset_index()
+            obj = obj.merge(obj_copy, how='left', on=['x', 'y'])
         obj = obj.fillna(0)
 
         if outfile:
@@ -334,6 +394,18 @@ class Gem(pd.DataFrame):
         return obj
 
     def to_anndata(self, bin_size=None, cell_loc=None, batch=None):
+        """
+        Convert the binning or cell labeling object to anndata
+
+        Parameters
+        ----------
+        bin_size: int
+            group into bins before convert with width and height of bin_size
+        cell_loc: pandas.DataFrame
+            dataframe with x and y coordinates for each cell label
+        batch: str
+            column name for Batch information if contain
+        """
 
         from scipy import sparse
         import anndata
@@ -410,7 +482,7 @@ class Gem(pd.DataFrame):
     def add_layer(self, image, mask=None):
         pass
 
-    def add_metadata(self, metadata, batch=None, bin_size=None, right_on=None,
+    def _add_metadata(self, metadata, batch=None, bin_size=None, right_on=None,
             inplace=False):
         """ add metadata info for each DNB
         metadata: csv file or pandas DataFrame
@@ -461,69 +533,83 @@ class Gem(pd.DataFrame):
             return obj
 
     def plot(self, 
-            on=None, features=None, bin_size=None, bycell=False,
-            metadata=None, batch=None, meta_on='cell',
-            cmap=None, category=False,
-            robust=False, vmin=None, vmax=None,
-            image=None, mask=None, border=None,
-            offset_x=0, offset_y=0, min_origin=True,
-            i_alpha=0.5, h_alpha=0.5, 
-            outfile=None, ax=None,
+            color=None, cmap=None, category=False, ncols=6,
+            ps=0.1, alpha=1, robust=False, vmin=None, vmax=None,
+            cbar=True, font_scale=1, dark_bg=True,
             dx=715, units='nm', scalebar_length=50,
-            ps=0.1, alpha=1, cbar=True,
-            atx=None, aty=None, rotation=None,
-            font_scale=1, dark_bg=True,
-            return_fig=False,
+            bin_size=None, bycell=False, batch=None, 
+            metadata=None, meta_on='cell', image=None, 
+            ax=None, outfile=None, return_fig=False, 
             ):
+        """
+        Plot the object in spatial coordinate
+
+        Parameters
+        ----------
+        color: str, list
+            Which information to plot, can be nCount, nFeature or any gene name
+        cmap: str, list
+            color map used for plot, can be matplotlib colormap or hex code
+        category: bool, default False
+            Whether or not the color is category
+        ncols: int
+            column number for multi-panel plot
+        ps: float
+            point size for scatter
+        alpha: float, between 0-1
+            alpha value for transparency
+        robust: bool, default False
+            color bar robust with 0.02 ~ 0.98
+        vmin, vmax: float
+            minimal and maximal value for color
+        cbar: bool, default True
+            Whether or not plot the color bar
+        font_scale: float
+            scale value for font size
+        dark_bg: bool, default True
+            Whether or not to plot in black background
+        dx, units, scalebar_length: float
+            deprecated scale bar parameters
+        bin_size: int
+            group into bins before convert with width and height of bin_size
+        bycell: bool, default False
+            Whether or not plot at cell level
+        batch: str
+            Column name for Batch information
+        metadata: pandas.DataFrame
+            deprecated
+        meta_on: str
+            deprecated
+        image: numpy.ndarray
+            numpy ndarray format image matrix, will be plot as background
+        ax: matplotlib.Axis, list
+            matplotlib.Axis object(s)
+        outfile: str
+            save the plot in file
+        return_fig: bool, default False
+            Whether or not to return the matplotlib figure
+        """
         
         obj = self.copy(deep=True)
 
-        if atx or aty or rotation:
-            obj, affine = obj.relocation(x=atx, y=aty, rotation=rotation, 
-                    return_affine=True)
-            if image is not None:
-                image = scipy.ndimage.affine_transform(image.T, affine, order=0).T
-            if mask is not None:
-                mask = scipy.ndimage.affine_transform(mask.T, affine, order=0).T
-            if border is not None:
-                border = scipy.ndimage.affine_transform(border.T, affine, order=0).T
-        
         if metadata is not None:
-            obj = obj.add_metadata(metadata, batch=batch, bin_size=bin_size, 
+            obj = obj._add_metadata(metadata, batch=batch, bin_size=bin_size, 
                     right_on=meta_on)
         
-        if offset_x or offset_y:
-            min_origin = False
-        if min_origin:
-            offset_x = obj['x'].min()
-            offset_y = obj['y'].min()
-        if offset_x or offset_y:
-            obj['x'] = obj['x'] - offset_x
-            obj['y'] = obj['y'] - offset_y
+        if isinstance(color, str):
+            color = [color]
+        genes = [x for x in color if x in obj.geneID.unique()]
+        obj = obj.stat(genes=genes, batch=batch, bycell=bycell)
+
+        assert all(x in obj.columns for x in color), f'{color} not find'
         
-        if bin_size:
-            obj['x'] = (obj['x'] / bin_size).astype(int)
-            obj['y'] = (obj['y'] / bin_size).astype(int)
-        
-        if on in ['nCount', 'nFeature'] and not features:
-            obj = obj.stat(batch=batch, bycell=bycell)
-        elif on in obj.geneID.unique() and not features:
-            obj = obj.stat(genes=on, bycell=bycell)
-        
-        if features and on:
-            obj = obj.stat(genes=features, bycell=bycell)
-        
-        assert on in obj.columns, f'{on} not find'
-        
-        obj = obj[['x', 'y', on]]
+        obj = obj[['x', 'y'] + color]
         obj = obj.drop_duplicates()
         
         import matplotlib as mpl
         import matplotlib.pyplot as plt
-        #from mpl_toolkits.axes_grid1 import axes_size, make_axes_locatable
         from mpl_toolkits.axes_grid1.inset_locator import inset_axes
         #from matplotlib_scalebar.scalebar import ScaleBar
-        
         
         if max(obj.img_shape) > 1000:
             shape_scale = 300
@@ -537,167 +623,168 @@ class Gem(pd.DataFrame):
         
         if dark_bg:
             plt.style.use('dark_background')
+
+        panels = len(color)
         if ax is None:
-            fig, ax = plt.subplots(figsize=shape, dpi=shape_scale)
+            if panels == 1:
+                nrows = 1
+                ncols = 1
+            elif panels > 1 and panels <= ncols:
+                nrows = 1
+                ncols = panels
+            elif panels > ncols:
+                nrows = panels // ncols + 1
+                ncols = ncols
+            fig, ax = plt.subplots(nrows, ncols, figsize=shape, dpi=shape_scale)
+            if nrows == 1 or ncols == 1:
+                axes = [ax[index] for index in range(panels)]
+            else:
+                axes = [ax[index // ncols, index % ncols] for index in range(panels)]
         else:
+            if panels != 1:
+                assert isinstance(ax, list), 'must provide list of ax ' \
+                                             'for multi-panel plot'
+                assert len(ax) < panels, 'no enough panel for plot'
             fig = plt.gcf()
-            ax = ax
+            axes = ax
         
-        obj = obj[obj[on].notna()]
         x = obj.x.values
         y = obj.y.values
-        value = obj[on].values
+        for c, axis in zip(color, axes):
+            value = obj[c].values
 
-        if robust:
-            vmin = np.nanpercentile(value, 0.02)
-            vmax = np.nanpercentile(value, 0.98)
+            if robust:
+                vmin = np.nanpercentile(value, 0.02)
+                vmax = np.nanpercentile(value, 0.98)
 
-        if vmin:
-            vmin = vmin
-        if vmax:
-            vmax = vmax
+            if vmin:
+                vmin = vmin
+            if vmax:
+                vmax = vmax
         
-        if isinstance(cmap, list):
-            if category:
-                N = len(set(value))
-                cmap = cmap[:N]
-            else:
-                N = len(cmap)
-            cmap = mpl.colors.ListedColormap(cmap, N=N)
-            if not category:
-                cmap = cmap.colors
-                cmap = mpl.colors.LinearSegmentedColormap.from_list('cmap', cmap)
-        elif isinstance(cmap, str):
             if category:
                 N = len(set(value))
             else:
                 N = 256
-            cmap = plt.get_cmap(cmap, N)
-            if category and isinstance(cmap, mpl.colors.LinearSegmentedColormap):
-                import matplotlib.colors as mc
-                cmap = [mc.rgb2hex(cmap(i)) for i in range(cmap.N)]
-                cmap = mpl.colors.ListedColormap(cmap, N=N)
+            cmap = get_cmap(cmap=cmap, N=N, category=category, theme='dark')
         
-        if isinstance(value[0], str):
-            value_map = dict((n, v + 1) for v, n in enumerate(set(value)))
-            for n, v in value_map.items():
-                print(n, v)
-            value = [value_map[n] for n in value]
-        #cmap = cmap(np.linspace(0, 1, len(set(value))))
+            if isinstance(value[0], str):
+                value_map = dict((n, v + 1) for v, n in enumerate(set(value)))
+                for n, v in value_map.items():
+                    print(n, v)
+                value = [value_map[n] for n in value]
+            #cmap = cmap(np.linspace(0, 1, len(set(value))))
 
-        if not ps:
-            ps = (72. / fig.dpi) ** 2
-            marker = ','
-        else:
-            ps = ps
-            marker = '.'
-        scatter = ax.scatter(x, y, 
-                s=ps,
-                c=value, 
-                cmap=cmap,
-                marker=marker,
-                #linewidths=0.1,
-                edgecolors='none',
-                vmin=vmin, 
-                vmax=vmax,
-                alpha=alpha,
-                zorder=5,
-                )
+            if not ps:
+                ps = (72. / fig.dpi) ** 2
+                marker = ','
+            else:
+                ps = ps
+                marker = '.'
+            scatter = ax.scatter(x, y, 
+                    s=ps,
+                    c=value, 
+                    cmap=cmap,
+                    marker=marker,
+                    linewidths=0,
+                    edgecolors='none',
+                    vmin=vmin, 
+                    vmax=vmax,
+                    alpha=alpha,
+                    zorder=5,
+                    )
 
-        if image is not None:
-            assert isinstance(image, np.ndarray)
+            if image is not None:
+                assert isinstance(image, np.ndarray)
             
-            if mask is not None:
-                assert isinstance(mask, np.ndarray)
-                mask = np.isin(mask, [0])
-                image[mask] = 0
-            if border is not None:
-                assert isinstance(border, np.ndarray)
+                if bin_size:
+                    import cv2
+                    width = int(image.shape[0] / bin_size)
+                    height = int(image.shape[1] / bin_size)
+                    image = cv2.resize(image, (width, height), 
+                            interpolation=cv2.INTER_NEAREST)
+            
+                imap = ax.imshow(image, cmap='gray', zorder=0, 
+                        interpolation='none')
 
-                mask = np.isin(border, [1])
-                image[mask] = 0
 
+            """
             if bin_size:
-                import cv2
-                width = int(image.shape[0] / bin_size)
-                height = int(image.shape[1] / bin_size)
-                image = cv2.resize(image, (width, height), interpolation=cv2.INTER_NEAREST)
-            
-            imap = ax.imshow(image, cmap='gray', zorder=0, interpolation='none')
+                dx = dx * bin_size
+            scalebar = ScaleBar(
+                    dx=dx, 
+                    units=units, 
+                    fixed_value=scalebar_length, 
+                    fixed_units='um',
+                    border_pad=0.5,
+                    color='white',
+                    width_fraction=0.025,
+                    length_fraction=0.3,
+                    scale_loc='top',
+                    location='lower right',
+                    box_alpha=0,
+                    label_loc='top',
+                    sep=5*font_scale,
+                    )
+            ax.add_artist(scalebar)
+            """
 
-        #plt.rc('savefig', dpi=100, bbox='tight', pad_inches=0)
-        mpl.rcParams.update({'font.size': font_scale * 18})
-
-        """
-        if bin_size:
-            dx = dx * bin_size
-        scalebar = ScaleBar(
-                dx=dx, 
-                units=units, 
-                fixed_value=scalebar_length, 
-                fixed_units='um',
-                border_pad=0.5,
-                color='white',
-                width_fraction=0.025,
-                length_fraction=0.3,
-                scale_loc='top',
-                location='lower right',
-                box_alpha=0,
-                label_loc='top',
-                sep=5*font_scale,
-                )
-        ax.add_artist(scalebar)
-        """
-
-        ax.set_yticks([])
-        ax.set_xticks([])
-        ax.set_ylabel('')
-        ax.set_xlabel('')
+            ax.set_yticks([])
+            ax.set_xticks([])
+            ax.set_ylabel('')
+            ax.set_xlabel('')
         
-        _all = ["top", "bottom", "right", "left"]
-        for spine in _all:
-            ax.spines[spine].set_visible(False)
+            _all = ["top", "bottom", "right", "left"]
+            for spine in _all:
+                ax.spines[spine].set_visible(False)
         
-        if cbar:
-            cax = inset_axes(ax, width='2%', height='30%', loc='upper right')
-            if not category:
-                mappable = scatter
-                #cb = fig.colorbar(scatter, cax=cax, label=on,)
-            else:
-                if isinstance(cmap, mpl.colors.ListedColormap):
-                    norm = mpl.colors.NoNorm()
+            if cbar:
+                cax = inset_axes(ax, width='2%', height='30%', loc='upper right')
+                if not category:
+                    mappable = scatter
+                    #cb = fig.colorbar(scatter, cax=cax, label=on,)
                 else:
-                    bounds = np.arange(-1, len(set(value)), 1)
-                    norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
-                mappable = mpl.cm.ScalarMappable(cmap=cmap, norm=norm)
+                    if isinstance(cmap, mpl.colors.ListedColormap):
+                        norm = mpl.colors.NoNorm()
+                    else:
+                        bounds = np.arange(-1, len(set(value)), 1)
+                        norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
+                    mappable = mpl.cm.ScalarMappable(cmap=cmap, norm=norm)
+    
+                if vmax and vmin:
+                    extend = 'both'
+                elif vmax:
+                    extend = 'max'
+                elif vmin:
+                    extend = 'min'
+                else:
+                    extend = 'neither'
 
-            if vmax and vmin:
-                extend = 'both'
-            elif vmax:
-                extend = 'max'
-            elif vmin:
-                extend = 'min'
-            else:
-                extend = 'neither'
+                cb = fig.colorbar(mappable, cax=cax, extend=extend) #label=on,)
 
-            cb = fig.colorbar(mappable, cax=cax, extend=extend) #label=on,)
-
-            cb.outline.set_visible(False)
-            cb.ax.tick_params(color='white', labelcolor='white', width=2*font_scale, length=10*font_scale)
-            cb.ax.set_ylabel(on, fontweight='bold')
-            cb.ax.yaxis.set_ticks_position('left')
-            cb.ax.yaxis.set_label_position('left')
+                cb.outline.set_visible(False)
+                cb.ax.tick_params(color='white', labelcolor='white', 
+                        width=2*font_scale, length=10*font_scale)
+                cb.ax.set_ylabel(color, fontweight='bold')
+                cb.ax.yaxis.set_ticks_position('left')
+                cb.ax.yaxis.set_label_position('left')
         
         plt.subplots_adjust(left=0, bottom=0, right=1, top=1, 
                 hspace=0, wspace=0)
+        mpl.rcParams.update({'font.size': font_scale * 18})
+
         if outfile:
             fig.savefig(outfile)
         if return_fig:
             return fig
         return ax
-    
+
     @property
     def center(self):
+        """
+        Center of the object in both axis coordinate and data coordinate
+            (axis_x, axis_y, data_x, data_y)
+        """
         
         x = int((self.x.max() - self.x.min()) / 2)
         gx = x + self.x.min()
@@ -708,11 +795,23 @@ class Gem(pd.DataFrame):
 
     def relocation(self, x=None, y=None, canvas=None, width=None, height=None, 
             rotation=0, return_affine=False):
-        """ given a canvas (a matrix), relocate the gem in the middow
-        x, y: target center
+        """
+        Re-locate the object coordinates with 
+            - a target center coordinate
+            - a target canvas (numpy ndarray matrix)
+            - a target shape
+
+        Parameters
+        ----------
+        x, y: int
+            coordinates of the target center
         canvas: target canvas
-        width, height: target canvas shape
-        rotation: clock wise rotation degree
+        width, height: int
+            pass
+        rotation: int
+            clock wise rotation degree
+        return_affine: bool, default False
+            Whether or not to return the affine matrix dict
         """
 
         import math
@@ -776,12 +875,27 @@ class Gem(pd.DataFrame):
     #@profile
     def rearrange(self, batch, order=None, rotation=None, ncols=6, pad=True, 
             return_affine=False):
-        """auto rearrange the location for batch gem
-        batch: which column should be detected as batch
-        order: values from batch column for ordering control
-        rotation: degree for clockwise rotation
-        ncols: col number in the figure
-        pad: whether append pad around each gem
+        """
+        Auto rearrange the location for batch gem
+
+        Parameters
+        ----------
+        bin_size: int
+            Group into bins before convert with width and height of bin_size
+        cell_loc: pandas.DataFrame
+            Dataframe with x and y coordinates for each cell label
+        batch: str
+            Column name for Batch information if contain
+        order: list
+            Values from batch column for ordering control
+        rotation: int
+            Degree for clockwise rotation
+        ncols: int
+            Column number in the figure
+        pad: bool, default True
+            Whether append pad around each object
+        return_affine: bool, default False
+            Whether or not to return the affine matrix dict
         """
 
         obj = self.copy(deep=True)
