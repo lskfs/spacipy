@@ -46,7 +46,6 @@ def get_cmap(cmap=None, N=None, category=False, theme='light'):
     return cmap
 
 from .gem import Gem
-from .gemplot import gem_spatial
-from .mask import Stoarr
+from .stoarr import Stoarr
 from .segplot import seg_spatial
 
