@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).parent
+print(HERE)
 sys.path[:0] = [str(HERE.parent), str(HERE / 'extensions')]
 
 nitpicky = True

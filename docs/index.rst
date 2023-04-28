@@ -1,3 +1,4 @@
+.. _topics-index:
 
 .. include:: _links.rst
 
@@ -5,8 +6,12 @@
 
 .. role:: smaller
 
+.. role:: underline
+    :class: underline
+
+=====================
 Spacipy documentation
-===============================
+=====================
 
 Spacipy is collection of in-house python modules, targeted at the stereo-seq, that aims to make basic data analysis, modeling and visualization easier. It builds on the well-known NumPy, Pandas and MatPlotLib packages.
 
@@ -15,33 +20,32 @@ Spacipy is collection of in-house python modules, targeted at the stereo-seq, th
     * Create well formatted plots
     * Change coordinates effortlessly
 
-Getting started
----------------
+:underline:`Getting started`
+============================
 
-.. toctree::
-	:caption: Getting started
+.. toctree:: 	
 	:hidden:
-
-	intro/overview
+	:maxdepth: 1
+	
 	intro/install
 	intro/tutorial
 	intro/examples
 
-:doc:`intro/overview`
-:doc:`intro/install`
-:doc:`intro/tutorial`
-:doc:`intro/examples`
+* :doc:`/intro/install`
+* :doc:`/intro/tutorial`
+* :doc:`/intro/examples`
 
-.. toctree::
-	:hidden: true
+:underline:`API`
+================
+
+.. toctree:: 
+	:hidden:
 	:maxdepth: 1
 
 	gem
 	stoarr
-	tutorials
-	usage-principles
-	installation
-	api
+
+* :doc:`/gem`: *object constructed based on pandas.DataFrame with adapted method for stereo-seq GEM file.*
+* :doc:`/stoarr`: *numpy.ndarray view casting with adapted method for spatial matrix*
 
 
-[github]: https://github.com/lskfs/spacipy

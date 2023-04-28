@@ -1,8 +1,9 @@
-.. _api.gem:
+.. _api-gem:
 
-======
+===
 Gem
-======
+===
+
 .. currentmodule:: spacipy
 
 Constructor
@@ -17,8 +18,6 @@ Attributes
 .. autosummary::
    :toctree: api/
 
-   Gem.offset_x
-   Gem.offset_y
    Gem.img_shape
    Gem.center
 
