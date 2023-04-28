@@ -25,3 +25,9 @@
 .wy-nav-content {
     max-width: 100%;
 }
+
+.underline {
+    border-bottom: 4px solid;
+    text-decoration: underline;
+}
+
