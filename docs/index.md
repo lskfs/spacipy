@@ -16,15 +16,15 @@ Spacipy documentation
 
 Spacipy is collection of in-house python modules, targeted at the stereo-seq, that aims to make basic data analysis, modeling and visualization easier. It builds on the well-known NumPy, Pandas and MatPlotLib packages.
 
-    + Quickly obtain data
-    + Easily convert format
-    + Create well formatted plots
-    + Change coordinates effortlessly
+    - Quickly obtain data
+    - Easily convert format
+    - Create well formatted plots
+    - Change coordinates effortlessly
 
 Getting started
 ===============
 
-.. toctree::
+```{toctree}
 	:caption: Getting started
 	:hidden:
 
@@ -32,13 +32,11 @@ Getting started
 	intro/install
 	intro/tutorial
 	intro/examples
-
-:doc:`intro/overview`
+```
+`intro/overview`
 :doc:`intro/install`
 :doc:`intro/tutorial`
 :doc:`intro/examples`
-
-.. _section-basics:
 
 ```{toctree}
 :hidden: true
