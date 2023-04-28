@@ -6,9 +6,6 @@
 
 .. role:: smaller
 
-.. role:: underline
-    :class: underline
-
 =====================
 Spacipy documentation
 =====================
@@ -20,8 +17,8 @@ Spacipy is collection of in-house python modules, targeted at the stereo-seq, th
     * Create well formatted plots
     * Change coordinates effortlessly
 
-:underline:`Getting started`
-============================
+Getting started
+===============
 
 .. toctree::
 	:hidden:
@@ -31,12 +28,12 @@ Spacipy is collection of in-house python modules, targeted at the stereo-seq, th
 	intro/tutorial
 	intro/examples
 
-* :doc:`intro/install`
-* :doc:`intro/tutorial`
-* :doc:`intro/examples`
+* :doc:`/intro/install`
+* :doc:`/intro/tutorial`
+* :doc:`/intro/examples`
 
-:underline:`API`
-================
+API
+===
 
 .. toctree::
 	:hidden:
