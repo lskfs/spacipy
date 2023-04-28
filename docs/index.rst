@@ -21,6 +21,7 @@ Getting started
 ===============
 
 .. toctree::
+	:caption: Getting started
 	:hidden:
 	:maxdepth: 1
 	
@@ -36,6 +37,7 @@ API
 ===
 
 .. toctree::
+	:caption: API
 	:hidden:
 	:maxdepth: 1
 
