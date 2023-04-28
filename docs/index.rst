@@ -1,13 +1,9 @@
 
 .. include:: _links.rst
 
-```{eval-rst}
 .. role:: small
-```
 
-```{eval-rst}
 .. role:: smaller
-```
 
 Spacipy documentation
 ===============================
@@ -36,16 +32,16 @@ Getting started
 :doc:`intro/tutorial`
 :doc:`intro/examples`
 
-```{toctree}
-:hidden: true
-:maxdepth: 1
+.. toctree::
+	:hidden: true
+	:maxdepth: 1
 
-gem
-stoarr
-tutorials
-usage-principles
-installation
-api
-```
+	gem
+	stoarr
+	tutorials
+	usage-principles
+	installation
+	api
+
 
 [github]: https://github.com/lskfs/spacipy
