@@ -23,7 +23,7 @@ Spacipy is collection of in-house python modules, targeted at the stereo-seq, th
 :underline:`Getting started`
 ============================
 
-.. toctree:: 	
+.. toctree::
 	:hidden:
 	:maxdepth: 1
 	
@@ -31,14 +31,14 @@ Spacipy is collection of in-house python modules, targeted at the stereo-seq, th
 	intro/tutorial
 	intro/examples
 
-* :doc:`/intro/install`
-* :doc:`/intro/tutorial`
-* :doc:`/intro/examples`
+* :doc:`intro/install`
+* :doc:`intro/tutorial`
+* :doc:`intro/examples`
 
 :underline:`API`
 ================
 
-.. toctree:: 
+.. toctree::
 	:hidden:
 	:maxdepth: 1
 
