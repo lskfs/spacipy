@@ -1,6 +1,0 @@
-.. _intro-examples:
-
-========
-Examples
-========
-
