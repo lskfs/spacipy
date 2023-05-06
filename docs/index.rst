@@ -17,19 +17,33 @@ Spacipy is collection of in-house python modules, targeted at the stereo-seq, th
     * Create well formatted plots
     * Change coordinates effortlessly
 
-Getting started
+Quick start
+===========
+
+.. toctree:: 
+	:caption: Quick start
+	:hidden: 
+	:maxdepth: 1
+
+	intro/install
+	intro/quickstart
+
+* :doc:`/intro/install`
+* :doc:`/intro/quickstart`
+
+tutorial
 ===============
 
 .. toctree::
-	:caption: Getting started
+	:caption: Tutorial
 	:hidden:
 	:maxdepth: 1
 	
-	intro/install
-	intro/tutorial
+	gem_process
+	stoarr_process
 
-* :doc:`/intro/install`
-* :doc:`/intro/tutorial`
+* :doc:`/intro/gem_process`
+* :doc:`/intro/stoarr_process`
 
 API
 ===
