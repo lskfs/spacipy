@@ -22,7 +22,6 @@ Quick start
 
 .. toctree:: 
 	:caption: Quick start
-	:hidden: 
 	:maxdepth: 1
 
 	intro/install
@@ -31,12 +30,11 @@ Quick start
 * :doc:`/intro/install`
 * :doc:`/intro/quickstart`
 
-tutorial
+Tutorial
 ===============
 
 .. toctree::
 	:caption: Tutorial
-	:hidden:
 	:maxdepth: 1
 	
 	gem_process
@@ -50,7 +48,6 @@ API
 
 .. toctree::
 	:caption: API
-	:hidden:
 	:maxdepth: 1
 
 	gem
