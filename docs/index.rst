@@ -32,15 +32,15 @@ Quick start
 * :doc:`/intro/basicusage`
 
 Tutorial
-===============
+========
 
 .. toctree::
 	:caption: Tutorial
 	:hidden: 
 	:maxdepth: 1
 	
-	gem_process
-	stoarr_process
+	intro/gem_process
+	intro/stoarr_process
 
 * :doc:`/intro/gem_process`
 * :doc:`/intro/stoarr_process`
