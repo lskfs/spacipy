@@ -14,3 +14,4 @@ python:
   - requirements: requirements.txt
   - requirements: docs/requirements.txt
   system_packages: true
+  use_system_site_packages: true
