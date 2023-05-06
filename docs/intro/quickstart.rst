@@ -1,13 +1,8 @@
 .. _intro-tutorial:
 
 ===========
-Quick Start
+Basic Usage
 ===========
-
-Installion
-==========
-
-See :doc:`install`.
 
 Read in the gem file as Gem object
 ==================================
