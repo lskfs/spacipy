@@ -27,11 +27,9 @@ Getting started
 	
 	intro/install
 	intro/tutorial
-	intro/examples
 
 * :doc:`/intro/install`
 * :doc:`/intro/tutorial`
-* :doc:`/intro/examples`
 
 API
 ===
