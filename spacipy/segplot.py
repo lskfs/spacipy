@@ -52,8 +52,7 @@ def seg_spatial(adata, color=None, highlight=None,
         if group_col not in obj.obs_keys():
             # assert as single batch adata object
             obj.obs[group_col] = seg_groups[0]
-        else:
-            groups = obj.obs[group_col].unique().tolist()
+        groups = obj.obs[group_col].unique().tolist()
     
     data = obj.obs[[color, group_col, label_col]].copy(deep=True)
     
@@ -76,8 +75,12 @@ def seg_spatial(adata, color=None, highlight=None,
         relabeled_data.append(data_group)
         seg_arr.append(seg)
 
-    concat_seg = seg_arr[0].concat(seg_arr[1:], cols=cols, dis=dis)
+    if len(groups) > 1:
+        concat_seg = seg_arr[0].concat(seg_arr[1:], cols=cols, dis=dis)
+    else:
+        concat_seg = seg_arr[0]
     relabeled_data = pd.concat(relabeled_data)
+    print(relabeled_data)
 
     ax = concat_seg.plot(
             annotation=relabeled_data, 

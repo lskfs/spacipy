@@ -42,6 +42,7 @@ extensions = [
     'sphinx.ext.autosummary',
     # 'plot_generator',
     'matplotlib.sphinxext.plot_directive',
+    'nbsphinx', 
 ]
 
 # -- Options for HTML output -------------------------------------------------
