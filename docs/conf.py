@@ -32,8 +32,8 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 pygments_style = 'sphinx'
 
 extensions = [
-    # 'myst_parser',
-    'myst_nb', 
+    'myst_parser',
+    'nbsphinx', 
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
     'sphinx.ext.doctest',
