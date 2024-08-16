@@ -33,6 +33,7 @@ pygments_style = 'sphinx'
 
 extensions = [
     'myst_parser',
+    'myst_nb', 
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
     'sphinx.ext.doctest',
@@ -42,7 +43,6 @@ extensions = [
     'sphinx.ext.autosummary',
     # 'plot_generator',
     'matplotlib.sphinxext.plot_directive',
-    'nbsphinx', 
 ]
 
 # -- Options for HTML output -------------------------------------------------
